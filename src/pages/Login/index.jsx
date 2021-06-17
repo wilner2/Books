@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
+import { ToastContainer, toast } from 'react-toastify';
 import Container, { ContainerLogo } from './styles';
 import Logo from '../../components/Logo';
 import Input from '../../components/input/index';
 import Button from '../../components/button/index';
 import { login } from '../../services/auth';
 import api from '../../services/api';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function index(props) {
   const formRef = useRef(null);
@@ -25,11 +27,15 @@ export default function index(props) {
       }).catch((e) => e);
 
     if (!isValid.name) {
-      const response = await api.post('/auth/sign-in', { email, password });
+      const response = await api.post('/auth/sign-in', { email, password }).catch((err) => ({ error: err.response }));
+      if (response.error) {
+        const { message } = response.error.data.errors;
+        return toast.error(message);
+      }
       login(response.headers.authorization, response.data);
       return props.history.push('/home');
     }
-    return alert(isValid.errors);
+    return toast.info(isValid.errors[0]);
   };
   return (
     <div>
@@ -54,6 +60,18 @@ export default function index(props) {
             <Button>Entrar</Button>
           </Input>
         </Form>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        <ToastContainer />
       </Container>
     </div>
   );
